@@ -12,10 +12,13 @@ typedef enum Pracownik {
 int main() {
 	int serwisPid;
 	int procesKonczacy;
+	char *const serwisArgs[] = { "./bin/serwis", NULL };
 	/*pid_t serwis[LICZBA_USLUG]*/;
 	if((serwisPid = fork()) == 0) {
-		sleep(5);
-		exit(0);
+		if(execv(serwisArgs[0], serwisArgs) == -1) {
+			perror("[ERR] Blad inicjalizacji serwisu");
+			exit(1);
+		}
 	}
 	procesKonczacy = wait(NULL);
 	if(procesKonczacy == serwisPid) {
