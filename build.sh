@@ -1,2 +1,6 @@
 #! /usr/bin/env bash
-gcc -std=c89 -Wall -Wextra -pedantic -o kierownik src/kierownik.c
+function compile() {
+	gcc -std=c89 -Wall -Wextra -pedantic -o bin/$1 src/$1.c
+}
+
+compile kierownik
