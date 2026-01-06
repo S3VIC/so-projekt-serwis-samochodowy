@@ -10,3 +10,4 @@ function compile() {
 compile kierownik
 compile serwis
 compile recepcja
+compile mechanik
