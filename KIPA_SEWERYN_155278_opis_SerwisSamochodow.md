@@ -56,3 +56,4 @@ zapisać w pliku (plikach) tekstowym.
 - Test poprawności funkcjonowania serwisu przy zgłaszanych sygnałach kierownika ograniczających dostępność serwisu (1, 4)
 - Test poprawności funkcjonoawania serwisu przy zgłaszanych sygnałach kierownika modyfikujących szybkość naprawy (2, 3)
 - Test poprawności funkcjonowania serwisu przy samochodach mogących zgłaszać się poza godzinami pracy serwisu, wraz ze zgłaszanymi sygnałami przez kierownika
+
