@@ -4,8 +4,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-int main() {
+int main(int argc, const char* argv[]) {
+	printf("Recepcja zainicjalizowana\n");
 	sleep(1);
-	printf("Hello world\n");
 	return 0;
 }
