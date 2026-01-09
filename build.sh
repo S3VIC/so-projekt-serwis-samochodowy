@@ -7,7 +7,20 @@ function compile() {
 	gcc -std=c89 -Wall -Wextra -pedantic -o bin/$1 src/$1.c
 }
 
+function clean() {
+	for i in bin/*
+	do
+		if [ -x $i ]; then
+			echo "Removing: $i"
+			rm $i
+		fi
+	done
+}
+
+clean
 compile kierownik
 compile serwis
 compile recepcja
 compile mechanik
+compile kasjer
+compile obslugaKlienta
