@@ -15,14 +15,19 @@ int main() {
 	int  procesKonczacy, res, i;
 	if((res = initObslugaKlienta()) != 0) {
 		perror("[ERR] Blad podczas inicjalizacji obslugi klienta");
-		exit(1);
+		return 1;
 	}
 	if((res = initKasjer()) != 0) {
 		perror("[ERR] Blad podczas inicjalizacji kasjera");
-		exit(1);
+		return 1;
 	}
-	printf("[INF] Recepcja zainicjalizowana\n");
+	if((res = initKolejka()) != 0) {
+		perror("[ERR] Blad podczas inicjalizacji kolejki");
+		return 1;
+	}
 	sleep(1);
+	printf("[INF] Recepcja zainicjalizowana\n");
+
 	for(i = 0; i < LICZBA_STANOWISK_OBS_KL; i++) {
 		procesKonczacy = waitpid(stObslKlPids[i], NULL, 0);
 		if(procesKonczacy == stObslKlPids[i])
@@ -33,6 +38,9 @@ int main() {
 	if(procesKonczacy == kasjerPid)
 		printf("[INF] Kasjer zakonczyl prace\n");
 	
+	procesKonczacy = waitpid(kolejkaPid, NULL, 0);
+	if(procesKonczacy == kolejkaPid)
+		printf("[INF] Kolejka zostala zamknieta\n");
 	return 0;
 }
 
@@ -43,7 +51,6 @@ int initObslugaKlienta() {
 	for(i = 0; i < LICZBA_STANOWISK_OBS_KL; i++)
 		stObslKlPids[i] = -1;
 	for(i = 0; i < LICZBA_STANOWISK_OBS_KL; i++) {
-		stObslKlPids[i] = fork();
 		if((stObslKlPids[i] = fork()) == -1) {
 			perror("[ERR] Blad inicjalizacji procesu dla st. obslugi klienta");
 			return -1;
@@ -60,7 +67,6 @@ int initObslugaKlienta() {
 
 int initKasjer() {
 	char *const kasjerArgs[] = { "./bin/kasjer", NULL };
-	kasjerPid = fork();
 	if((kasjerPid = fork()) == -1) {
 		perror("[ERR] Blad inicjalizacji procesu dla kasjera");
 		return -1;
@@ -68,6 +74,21 @@ int initKasjer() {
 	if (kasjerPid == 0) {
 		if(execv(kasjerArgs[0], kasjerArgs) == -1) {
 			perror("[ERR] Blad uruchomienia aplikacji kasjera");
+			return -1;
+		}
+	}
+	return 0;
+}
+
+int initKolejka() {
+	char *const kolejkaArgs[] = { "./bin/kolejka", NULL };
+	if((kolejkaPid = fork()) == -1) {
+		perror("[ERR] Blad inicjalizacji procesu dla kolejki");
+		return -1;
+	}
+	if (kolejkaPid == 0) {
+		if(execv(kolejkaArgs[0], kolejkaArgs) == -1) {
+			perror("[ERR] Blad uruchomienia aplikacji kolejki");
 			return -1;
 		}
 	}

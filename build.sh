@@ -24,3 +24,4 @@ compile recepcja
 compile mechanik
 compile kasjer
 compile obslugaKlienta
+compile kolejka
