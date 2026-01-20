@@ -3,7 +3,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
+#include <sys/msg.h>
+#include "shared.h"
 #define LICZBA_STANOWISK_OBS_KL 3
 
 int initObslugaKlienta();
@@ -12,6 +13,18 @@ int initKolejka();
 
 int stObslKlPids[3], kasjerPid, kolejkaPid;
 int main() {
+	int kierownikMsgQKlucz, kierownikMsgQId;
+	initKom recepcjaInit;
+	recepcjaInit.typ = ID_RECEPCJA;
+	recepcjaInit.status = 1;
+	if((kierownikMsgQKlucz = ftok(sSciezka, ID_KIEROWNIK)) == -1) {
+		printf("[ERR] Recepcja: Blad generacji klucza dla kolejki kierownika\n");
+		exit(1);
+	}
+	if((kierownikMsgQId = msgget(kierownikMsgQKlucz, IPC_CREAT | 0600)) == -1) {
+		printf("[ERR] Recepcja: Blad tworzenia kolejki kierownika\n");
+		exit(1);
+	}
 	int  procesKonczacy, res, i;
 	if((res = initObslugaKlienta()) != 0) {
 		perror("[ERR] Blad podczas inicjalizacji obslugi klienta");
@@ -26,7 +39,12 @@ int main() {
 		return 1;
 	}
 	sleep(1);
-	printf("[INF] Recepcja zainicjalizowana\n");
+	recepcjaInit.typ = ID_RECEPCJA;
+	recepcjaInit.status = 1;
+	if(msgsnd(kierownikMsgQId, &recepcjaInit, sizeof(recepcjaInit.status), 0) == -1) {
+		printf("[ERR] Recepcja: Blad wysylania informacji o inicjalizacji recepcji\n");
+		exit(1);
+	}
 
 	for(i = 0; i < LICZBA_STANOWISK_OBS_KL; i++) {
 		procesKonczacy = waitpid(stObslKlPids[i], NULL, 0);

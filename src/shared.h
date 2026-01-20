@@ -1,29 +1,30 @@
 #define SLEEP_TIME_S 1
 #define SLEEP_TIME_US 5000
-#define MAX_ROZMIAR_KOLEJKI 50
+#define ID_KIEROWNIK 0
+#define ID_RECEPCJA 1
+#define ID_SERWIS 2
+#define ID_KOLEJKA 3
+#define ID_OBSLUGA_KLIENTA 4
+#define ID_KASJER 5
 
-
-
+const char* sSciezka = "./bin";
 typedef struct {
-	unsigned int godzina;
-	unsigned int minuty;
-	unsigned int otwarteOd;
-	unsigned int otwarteDo;
-} zegar;
-
+	long int typ;
+	int status;
+} initKom;
 typedef struct {
 	char model;
 	int pid;
 	int usterki[3];
 } kierowca;
 
-enum {
+typedef enum {
  	U1 = 0, U2, U3, U4, U5, U6, U7, U8,
 	U9, U10, U11, U12, U13, U14, U15, U16,
 	U17, U18, U19, U20, U21, U22, U23, U24,
 	U25, U26, U27, U28, U29, U30, U31, U32,
 	U33
-};
+} usluga;
 
 int uslugiKoszty[33] = {
 	5, 10, 15, 20, 25, 30, 35, 40,
