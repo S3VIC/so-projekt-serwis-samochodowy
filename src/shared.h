@@ -1,3 +1,4 @@
+#include <sys/msg.h>
 #define SLEEP_TIME_S 1
 #define SLEEP_TIME_US 5000
 #define ID_KIEROWNIK 0
@@ -60,3 +61,16 @@ int uslugiCzas[33] = {
 	30, 35, 30, 45, 40, 20, 25, 30, 35, 20,
 	50, 55, 50
 };
+
+int initKierownikMsgQ(int *id) {
+	int klucz;
+	if((klucz = ftok(sSciezka, ID_KIEROWNIK)) == -1) {
+		printf("[ERR] Blad generacji klucza dla kolejki kierownika\n");
+		return -1;
+	}
+	if((*id = msgget(klucz, IPC_CREAT | IPC_EXCL | 0600)) == -1) {
+		printf("[ERR] Blad tworzenia kolejki kierownika\n");
+		return -1;
+	}
+	return 0;
+}
