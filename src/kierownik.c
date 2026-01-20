@@ -7,6 +7,7 @@
 #include <sys/msg.h>
 
 void initPidySerwisu(serwis *pidy);
+int sprawdzStanSerwisu(serwis *pidy);
 int initSerwis();
 int initRecepcja();
 int serwisPid, recepcjaPid, kierownikMsgQKlucz, kierownikMsgQId;
@@ -14,7 +15,7 @@ int main() {
 	serwis pidySerwisu;
 	initKom recepcjaKom, kasjerKom, kolejkaKom;
 	initObslugaKlientaKom obslugaKlientaKom;
-	int procesKonczacy;
+	int procesKonczacy, i;
 	if((kierownikMsgQKlucz = ftok(sSciezka, ID_KIEROWNIK)) == -1) {
 		printf("[ERR] Blad generacji klucza dla kolejki kierownika\n");
 		exit(1);
@@ -31,6 +32,7 @@ int main() {
 		exit(1);
 	} else {
 		printf("[INF] Kasjer zainicjalizowany pomyslnie\n");
+		pidySerwisu.kasjer = kasjerKom.pid;
 	}
 	if(msgrcv(kierownikMsgQId, &kolejkaKom, sizeof(kolejkaKom.pid), ID_KOLEJKA, 0) == -1) {
 		printf("[ERR] Blad odbioru informacji o kolejce\n");
@@ -38,6 +40,7 @@ int main() {
 		exit(1);
 	} else {
 		printf("[INF] Kolejka zainicjalizowana pomyslnie\n");
+		pidySerwisu.kolejka = kolejkaKom.pid;
 	}
 	if(msgrcv(kierownikMsgQId, &obslugaKlientaKom, sizeof(obslugaKlientaKom.pids), ID_OBSLUGA_KLIENTA, 0) == -1) {
 		printf("[ERR] Blad odbioru informacji o obsludze klienta\n");
@@ -45,6 +48,8 @@ int main() {
 		exit(1);
 	} else {
 		printf("[INF] Oblsuga klienta zainicjalizowana pomyslnie\n");
+		for(i = 0; i < 3; i++)
+			pidySerwisu.obslugaKlienta[i] = obslugaKlientaKom.pids[i];
 	}
 	if(msgrcv(kierownikMsgQId, &recepcjaKom, sizeof(recepcjaKom.pid), ID_RECEPCJA, 0) == -1) {
 		printf("[ERR] Blad odbioru informacji o recepcji\n");
@@ -52,6 +57,10 @@ int main() {
 		exit(1);
 	} else {
 		printf("[INF] Recepcja zainicjalizowana pomyslnie\n");
+		pidySerwisu.recepcja = recepcjaKom.pid;
+	}
+	if(sprawdzStanSerwisu(&pidySerwisu) == 0) {
+		printf("[INF] Kierownik: Status serwisu - pozytywny\n");
 	}
 	/*if(msgrcv(kierownikMsgQId, &recepcjaKom, sizeof(recepcjaKom.status), ID_RECEPCJA, 0) == -1) {
 		printf("[ERR] Blad odbioru informacji o recepcji\n");
@@ -101,4 +110,16 @@ void initPidySerwisu(serwis *pidy) {
 		pidy->obslugaKlienta[i] = -1;
 	for(i = 0; i < 7; i++)
 		pidy->serwis[i] = -1;
+}
+
+int sprawdzStanSerwisu(serwis *pidy) {
+	int i;
+	if(pidy->recepcja < 0) return -1;
+	if(pidy->kolejka < 0) return -1;
+	if(pidy->kasjer < 0) return -1;
+	for(i = 0; i < 3; i++)
+		if(pidy->obslugaKlienta[i] < 0) return -1;
+	/*for(i = 0; i < 7; i++)
+		if(pidy->serwis[i] < 0) return -1;*/
+	return 0;
 }
