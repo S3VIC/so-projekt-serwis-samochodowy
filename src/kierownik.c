@@ -14,14 +14,15 @@ int serwisPid, recepcjaPid, kierownikMsgQId;
 
 initKom recepcjaKom, kasjerKom, kolejkaKom;
 initObslugaKlientaKom obslugaKlientaKom;
+initSerwisKom serwisKom;
 serwis pidySerwisu;
 
 int main() {
 	int procesKonczacy;
-	initKierownikMsgQ(&kierownikMsgQId);
+	initKierownikMsgQ(&kierownikMsgQId, IPC_CREAT | IPC_EXCL | 0600);
 	initPidySerwisu(&pidySerwisu);
-	/*initSerwis();*/
 	initRecepcja();
+	initSerwis();
 	if(sprawdzStanSerwisu(&pidySerwisu) == 0) {
 		printf("[INF] Kierownik: Status serwisu - pozytywny\n");
 	}
@@ -49,6 +50,14 @@ int initSerwis() {
 			perror("[ERR] Blad inicjalizacji serwisu");
 			exit(1);
 		}
+	}
+	if(msgrcv(kierownikMsgQId, &serwisKom, sizeof(serwisKom.pids), ID_SERWIS, 0) == -1) {
+		printf("[ERR] Blad odbioru informacji o serwisie\n");
+		msgctl(kierownikMsgQId, IPC_RMID, NULL);
+		return -1;
+	} else {
+		printf("[INF] Serwis zainicjalizowany pomyslnie\n");
+		memcpy(pidySerwisu.serwis, serwisKom.pids, sizeof(serwisKom.pids));
 	}
 	return 0;
 }
@@ -84,7 +93,7 @@ int initRecepcja() {
 		exit(1);
 	} else {
 		printf("[INF] Oblsuga klienta zainicjalizowana pomyslnie\n");
-		for(i = 0; i < 3; i++)
+		for(i = 0; i < LICZBA_ST_OBSLUGI_KLIENTA; i++)
 			pidySerwisu.obslugaKlienta[i] = obslugaKlientaKom.pids[i];
 	}
 	if(msgrcv(kierownikMsgQId, &recepcjaKom, sizeof(recepcjaKom.pid), ID_RECEPCJA, 0) == -1) {
@@ -103,9 +112,9 @@ void initPidySerwisu(serwis *pidy) {
 	pidy->recepcja = -1;
 	pidy->kolejka = -1;
 	pidy->kasjer = -1;
-	for(i = 0; i < 3; i++)
+	for(i = 0; i < LICZBA_ST_OBSLUGI_KLIENTA; i++)
 		pidy->obslugaKlienta[i] = -1;
-	for(i = 0; i < 7; i++)
+	for(i = 0; i < LICZBA_MECHANIKOW; i++)
 		pidy->serwis[i] = -1;
 }
 
@@ -114,9 +123,9 @@ int sprawdzStanSerwisu(serwis *pidy) {
 	if(pidy->recepcja < 0) return -1;
 	if(pidy->kolejka < 0) return -1;
 	if(pidy->kasjer < 0) return -1;
-	for(i = 0; i < 3; i++)
+	for(i = 0; i < LICZBA_ST_OBSLUGI_KLIENTA; i++)
 		if(pidy->obslugaKlienta[i] < 0) return -1;
-	/*for(i = 0; i < 7; i++)
-		if(pidy->serwis[i] < 0) return -1;*/
+	for(i = 0; i < LICZBA_MECHANIKOW; i++)
+		if(pidy->serwis[i] < 0) return -1;
 	return 0;
 }

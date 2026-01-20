@@ -1,4 +1,5 @@
 #include <sys/msg.h>
+#include <string.h>
 #define SLEEP_TIME_S 1
 #define SLEEP_TIME_US 5000
 #define ID_KIEROWNIK 0
@@ -8,24 +9,27 @@
 #define ID_OBSLUGA_KLIENTA 4
 #define ID_KASJER 5
 
+#define LICZBA_MECHANIKOW 8
+#define LICZBA_ST_OBSLUGI_KLIENTA 3
+
 const char* sSciezka = "./bin";
 
 typedef struct {
 	pid_t recepcja;
 	pid_t kolejka;
 	pid_t kasjer;
-	pid_t obslugaKlienta[3];
-	pid_t serwis[7];
+	pid_t obslugaKlienta[LICZBA_ST_OBSLUGI_KLIENTA];
+	pid_t serwis[LICZBA_MECHANIKOW];
 } serwis;
 
 typedef struct {
 	long int typ;
-	int pids[7];
+	int pids[LICZBA_MECHANIKOW];
 } initSerwisKom;
 
 typedef struct {
 	long int typ;
-	int pids[3];
+	int pids[LICZBA_ST_OBSLUGI_KLIENTA];
 } initObslugaKlientaKom;
 
 typedef struct {
@@ -36,7 +40,7 @@ typedef struct {
 typedef struct {
 	char model;
 	int pid;
-	int usterki[3];
+	int usterki[LICZBA_ST_OBSLUGI_KLIENTA];
 } kierowca;
 
 typedef enum {
@@ -62,14 +66,14 @@ int uslugiCzas[33] = {
 	50, 55, 50
 };
 
-int initKierownikMsgQ(int *id) {
+int initKierownikMsgQ(int *id, int flags) {
 	int klucz;
 	if((klucz = ftok(sSciezka, ID_KIEROWNIK)) == -1) {
 		printf("[ERR] Blad generacji klucza dla kolejki kierownika\n");
 		return -1;
 	}
-	if((*id = msgget(klucz, IPC_CREAT | IPC_EXCL | 0600)) == -1) {
-		printf("[ERR] Blad tworzenia kolejki kierownika\n");
+	if((*id = msgget(klucz, flags)) == -1) {
+		printf("[ERR] Blad inicjalizacji kolejki kierownika\n");
 		return -1;
 	}
 	return 0;
