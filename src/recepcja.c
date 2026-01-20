@@ -12,11 +12,14 @@ int initKasjer();
 int initKolejka();
 
 int stObslKlPids[3], kasjerPid, kolejkaPid;
+int kierownikMsgQId;
+initObslugaKlientaKom obslugaKlientaInit;
 int main() {
-	int kierownikMsgQKlucz, kierownikMsgQId;
-	initKom recepcjaInit;
+	int kierownikMsgQKlucz;
+	int  procesKonczacy, res, i;
+	initKom recepcjaInit, kolejkaInit, kasjerInit;
 	recepcjaInit.typ = ID_RECEPCJA;
-	recepcjaInit.status = 1;
+	recepcjaInit.pid = 1;
 	if((kierownikMsgQKlucz = ftok(sSciezka, ID_KIEROWNIK)) == -1) {
 		printf("[ERR] Recepcja: Blad generacji klucza dla kolejki kierownika\n");
 		exit(1);
@@ -25,23 +28,34 @@ int main() {
 		printf("[ERR] Recepcja: Blad tworzenia kolejki kierownika\n");
 		exit(1);
 	}
-	int  procesKonczacy, res, i;
-	if((res = initObslugaKlienta()) != 0) {
-		perror("[ERR] Blad podczas inicjalizacji obslugi klienta");
+	if(initObslugaKlienta() != 0) {
 		return 1;
-	}
+	} 	
 	if((res = initKasjer()) != 0) {
 		perror("[ERR] Blad podczas inicjalizacji kasjera");
 		return 1;
+	} else {
+		kasjerInit.typ = ID_KASJER;
+		kasjerInit.pid = kasjerPid;
+		if(msgsnd(kierownikMsgQId, &kasjerInit, sizeof(kasjerInit.pid), 0) == -1) {
+			printf("[ERR] Recepcja: Blad wysylania informacji o inicjalizacji kasjera\n");
+			exit(1);
+		}
 	}
 	if((res = initKolejka()) != 0) {
 		perror("[ERR] Blad podczas inicjalizacji kolejki");
 		return 1;
+	} else {
+		kolejkaInit.typ = ID_KOLEJKA;
+		kolejkaInit.pid = kolejkaPid;
+		if(msgsnd(kierownikMsgQId, &kolejkaInit, sizeof(kolejkaInit.pid), 0) == -1) {
+			printf("[ERR] Recepcja: Blad wysylania informacji o inicjalizacji kolejki\n");
+			exit(1);
+		}
 	}
-	sleep(1);
 	recepcjaInit.typ = ID_RECEPCJA;
-	recepcjaInit.status = 1;
-	if(msgsnd(kierownikMsgQId, &recepcjaInit, sizeof(recepcjaInit.status), 0) == -1) {
+	recepcjaInit.pid = 1;
+	if(msgsnd(kierownikMsgQId, &recepcjaInit, sizeof(recepcjaInit.pid), 0) == -1) {
 		printf("[ERR] Recepcja: Blad wysylania informacji o inicjalizacji recepcji\n");
 		exit(1);
 	}
@@ -64,23 +78,37 @@ int main() {
 
 
 int initObslugaKlienta() {
-	int i;
+	int i, res;
 	char *const obslKlArgs[] = { "./bin/obslugaKlienta", NULL };
+	res = 0;
 	for(i = 0; i < LICZBA_STANOWISK_OBS_KL; i++)
 		stObslKlPids[i] = -1;
 	for(i = 0; i < LICZBA_STANOWISK_OBS_KL; i++) {
 		if((stObslKlPids[i] = fork()) == -1) {
 			perror("[ERR] Blad inicjalizacji procesu dla st. obslugi klienta");
-			return -1;
+			res = -1;
+			break;
 		}
 		if(stObslKlPids[i] == 0) {
 			if(execv(obslKlArgs[0], obslKlArgs) == -1) {
 				perror("[ERR] Blad uruchomienia aplikacji st. obslugi klienta");
-				return -1;
+				res = -1;
+				break;
 			}
 		}
 	}
-	return 0;
+	if(res == -1) {
+		perror("[ERR] Blad podczas inicjalizacji obslugi klienta");
+		return res;
+	}
+	obslugaKlientaInit.typ = ID_OBSLUGA_KLIENTA;
+	for(i = 0; i < LICZBA_STANOWISK_OBS_KL; i++)
+		obslugaKlientaInit.pids[i] = stObslKlPids[i];
+	if(msgsnd(kierownikMsgQId, &obslugaKlientaInit, sizeof(obslugaKlientaInit.pids), 0) == -1) {
+		printf("[ERR] Recepcja: Blad wysylania informacji o inicjalizacji obslugi klienta\n");
+		res = -1;
+	}
+	return res;
 }
 
 int initKasjer() {

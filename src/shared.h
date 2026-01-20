@@ -8,10 +8,30 @@
 #define ID_KASJER 5
 
 const char* sSciezka = "./bin";
+
+typedef struct {
+	pid_t recepcja;
+	pid_t kolejka;
+	pid_t kasjer;
+	pid_t obslugaKlienta[3];
+	pid_t serwis[7];
+} serwis;
+
 typedef struct {
 	long int typ;
-	int status;
+	int pids[7];
+} initSerwisKom;
+
+typedef struct {
+	long int typ;
+	int pids[3];
+} initObslugaKlientaKom;
+
+typedef struct {
+	long int typ;
+	int pid;
 } initKom;
+
 typedef struct {
 	char model;
 	int pid;
