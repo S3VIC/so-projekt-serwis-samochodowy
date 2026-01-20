@@ -14,10 +14,11 @@ int initKolejka();
 int stObslKlPids[3], kasjerPid, kolejkaPid;
 int kierownikMsgQId;
 initObslugaKlientaKom obslugaKlientaInit;
+initKom kolejkaInit, kasjerInit;
 int main() {
 	int kierownikMsgQKlucz;
-	int  procesKonczacy, res, i;
-	initKom recepcjaInit, kolejkaInit, kasjerInit;
+	int  procesKonczacy, i;
+	initKom recepcjaInit;
 	recepcjaInit.typ = ID_RECEPCJA;
 	recepcjaInit.pid = 1;
 	if((kierownikMsgQKlucz = ftok(sSciezka, ID_KIEROWNIK)) == -1) {
@@ -28,31 +29,10 @@ int main() {
 		printf("[ERR] Recepcja: Blad tworzenia kolejki kierownika\n");
 		exit(1);
 	}
-	if(initObslugaKlienta() != 0) {
-		return 1;
-	} 	
-	if((res = initKasjer()) != 0) {
-		perror("[ERR] Blad podczas inicjalizacji kasjera");
-		return 1;
-	} else {
-		kasjerInit.typ = ID_KASJER;
-		kasjerInit.pid = kasjerPid;
-		if(msgsnd(kierownikMsgQId, &kasjerInit, sizeof(kasjerInit.pid), 0) == -1) {
-			printf("[ERR] Recepcja: Blad wysylania informacji o inicjalizacji kasjera\n");
-			exit(1);
-		}
-	}
-	if((res = initKolejka()) != 0) {
-		perror("[ERR] Blad podczas inicjalizacji kolejki");
-		return 1;
-	} else {
-		kolejkaInit.typ = ID_KOLEJKA;
-		kolejkaInit.pid = kolejkaPid;
-		if(msgsnd(kierownikMsgQId, &kolejkaInit, sizeof(kolejkaInit.pid), 0) == -1) {
-			printf("[ERR] Recepcja: Blad wysylania informacji o inicjalizacji kolejki\n");
-			exit(1);
-		}
-	}
+	/*TODO Error handling */
+	if(initObslugaKlienta() != 0) { return 1; } 	
+	if(initKasjer() != 0) { return 1; }
+	if(initKolejka() != 0) { return 1; }
 	recepcjaInit.typ = ID_RECEPCJA;
 	recepcjaInit.pid = 1;
 	if(msgsnd(kierownikMsgQId, &recepcjaInit, sizeof(recepcjaInit.pid), 0) == -1) {
@@ -123,6 +103,12 @@ int initKasjer() {
 			return -1;
 		}
 	}
+	kasjerInit.typ = ID_KASJER;
+	kasjerInit.pid = kasjerPid;
+	if(msgsnd(kierownikMsgQId, &kasjerInit, sizeof(kasjerInit.pid), 0) == -1) {
+		printf("[ERR] Recepcja: Blad wysylania informacji o inicjalizacji kasjera\n");
+		return -1;
+	}
 	return 0;
 }
 
@@ -137,6 +123,12 @@ int initKolejka() {
 			perror("[ERR] Blad uruchomienia aplikacji kolejki");
 			return -1;
 		}
+	}
+	kolejkaInit.typ = ID_KOLEJKA;
+	kolejkaInit.pid = kolejkaPid;
+	if(msgsnd(kierownikMsgQId, &kolejkaInit, sizeof(kolejkaInit.pid), 0) == -1) {
+		printf("[ERR] Recepcja: Blad wysylania informacji o inicjalizacji kolejki\n");
+		return -1;
 	}
 	return 0;
 }
