@@ -66,15 +66,31 @@ int uslugiCzas[33] = {
 	50, 55, 50
 };
 
-int initKierownikMsgQ(int *id, int flags) {
+const char* moduly[6] = {
+	"Kierownik",
+	"Recepcja",
+	"Serwis",
+	"Kolejka",
+	"Obsluga klienta",
+	"Kasjer"
+};
+
+int initMsgQ(int *qid, int id, int flags, int id2) {
 	int klucz;
-	if((klucz = ftok(sSciezka, ID_KIEROWNIK)) == -1) {
-		printf("[ERR] Blad generacji klucza dla kolejki kierownika\n");
+	if((klucz = ftok(sSciezka, id)) == -1) {
+		if(id2 >= 0)
+			printf("[ERR] Blad generacji klucza kolejki dla: %s-%s\n", moduly[id], moduly[id2]);
+		else
+			printf("[ERR] Blad generacji klucza kolejki dla: %s\n", moduly[id]);
 		return -1;
 	}
-	if((*id = msgget(klucz, flags)) == -1) {
-		printf("[ERR] Blad inicjalizacji kolejki kierownika\n");
+	if((*qid = msgget(klucz, flags)) == -1) {
+		if(id2 >= 0)
+			printf("[ERR] Blad inicjalizacji kolejki: %s-%s\n", moduly[id], moduly[id2]);
+		else
+			printf("[ERR] Blad inicjalizacji kolejki: %s\n", moduly[id]);
 		return -1;
 	}
 	return 0;
 }
+

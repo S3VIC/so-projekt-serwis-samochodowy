@@ -10,7 +10,7 @@ int kierownikMsgQId;
 initSerwisKom serwisKom;
 int main() {
 	int i, procesKonczacy;
-	initKierownikMsgQ(&kierownikMsgQId, IPC_CREAT | 0600);
+	initMsgQ(&kierownikMsgQId, ID_KIEROWNIK, IPC_CREAT | 0600, -1);
 	initMechanicy();
 	sleep(1);
 	for(i = 0; i < LICZBA_MECHANIKOW; i++) {

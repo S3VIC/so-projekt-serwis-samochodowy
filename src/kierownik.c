@@ -19,22 +19,17 @@ serwis pidySerwisu;
 
 int main() {
 	int procesKonczacy;
-	initKierownikMsgQ(&kierownikMsgQId, IPC_CREAT | IPC_EXCL | 0600);
+	initMsgQ(&kierownikMsgQId, ID_KIEROWNIK, IPC_CREAT | IPC_EXCL | 0600, -1);
 	initPidySerwisu(&pidySerwisu);
 	initRecepcja();
 	initSerwis();
 	if(sprawdzStanSerwisu(&pidySerwisu) == 0) {
 		printf("[INF] Kierownik: Status serwisu - pozytywny\n");
 	}
-	/*if(msgrcv(kierownikMsgQId, &recepcjaKom, sizeof(recepcjaKom.status), ID_RECEPCJA, 0) == -1) {
-		printf("[ERR] Blad odbioru informacji o recepcji\n");
-		msgctl(kierownikMsgQId, IPC_RMID, NULL);
-		exit(1);
-	} */
-/*	procesKonczacy = waitpid(serwisPid, NULL, 0);
-if(procesKonczacy == serwisPid) {
+	procesKonczacy = waitpid(serwisPid, NULL, 0);
+	if(procesKonczacy == serwisPid) {
 		printf("Serwis zakonczyl prace\n");
-	}*/
+	}
 	procesKonczacy = waitpid(recepcjaPid, NULL, 0);
 	if(procesKonczacy == recepcjaPid) {
 		printf("Recepcja zakonczyla prace\n");

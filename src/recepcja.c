@@ -16,25 +16,15 @@ int kierownikMsgQId;
 initObslugaKlientaKom obslugaKlientaInit;
 initKom kolejkaInit, kasjerInit;
 int main() {
-	int kierownikMsgQKlucz;
-	int  procesKonczacy, i;
+	int procesKonczacy, i;
 	initKom recepcjaInit;
-	recepcjaInit.typ = ID_RECEPCJA;
-	recepcjaInit.pid = 1;
-	if((kierownikMsgQKlucz = ftok(sSciezka, ID_KIEROWNIK)) == -1) {
-		printf("[ERR] Recepcja: Blad generacji klucza dla kolejki kierownika\n");
-		exit(1);
-	}
-	if((kierownikMsgQId = msgget(kierownikMsgQKlucz, IPC_CREAT | 0600)) == -1) {
-		printf("[ERR] Recepcja: Blad tworzenia kolejki kierownika\n");
-		exit(1);
-	}
+	initMsgQ(&kierownikMsgQId, ID_KIEROWNIK, IPC_CREAT | 0600, -1);
 	/*TODO Error handling */
 	if(initObslugaKlienta() != 0) { return 1; } 	
 	if(initKasjer() != 0) { return 1; }
 	if(initKolejka() != 0) { return 1; }
 	recepcjaInit.typ = ID_RECEPCJA;
-	recepcjaInit.pid = 1;
+	recepcjaInit.pid = getpid();
 	if(msgsnd(kierownikMsgQId, &recepcjaInit, sizeof(recepcjaInit.pid), 0) == -1) {
 		printf("[ERR] Recepcja: Blad wysylania informacji o inicjalizacji recepcji\n");
 		exit(1);
