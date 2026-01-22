@@ -15,22 +15,23 @@
 const char* sSciezka = "./bin";
 
 typedef struct {
-	pid_t recepcja;
-	pid_t kolejka;
-	pid_t kasjer;
-	pid_t obslugaKlienta[LICZBA_ST_OBSLUGI_KLIENTA];
-	pid_t serwis[LICZBA_MECHANIKOW];
-} serwis;
+	long int typ;
+	pid_t pid;
+	pid_t mechanicy[LICZBA_MECHANIKOW];
+} service;
 
 typedef struct {
 	long int typ;
-	int pids[LICZBA_MECHANIKOW];
-} initSerwisKom;
+	pid_t pid;
+	pid_t kasjer;
+	pid_t kolejka;
+	pid_t obslugaKlienta[LICZBA_ST_OBSLUGI_KLIENTA];
+} reception;
 
 typedef struct {
 	long int typ;
 	int pids[LICZBA_ST_OBSLUGI_KLIENTA];
-} initObslugaKlientaKom;
+} obslugaKlientaKom;
 
 typedef struct {
 	long int typ;
@@ -94,3 +95,19 @@ int initMsgQ(int *qid, int id, int flags, int id2) {
 	return 0;
 }
 
+int initProcess(const char* name, char *const args[]) {
+	int pid;
+	if((pid = fork()) == -1) {
+		printf("[ERR] Blad inicjalizacji procesu: %s", name);
+		return -1;
+	}
+	if(pid == 0) {
+		/*const char buf[20];	
+		sprintf(buf, "%s/%s", sSciezka, name);*/
+		if(execv(args[0], args) == -1) {
+			printf("[ERR] Blad uruchomienia aplikacji: %s\n", name);
+			exit(1);
+		}
+	}
+	return pid;
+}

@@ -7,15 +7,15 @@
 
 int initMechanicy();
 int kierownikMsgQId;
-initSerwisKom serwisKom;
+service serwis;
 int main() {
 	int i, procesKonczacy;
 	initMsgQ(&kierownikMsgQId, ID_KIEROWNIK, IPC_CREAT | 0600, -1);
 	initMechanicy();
 	sleep(1);
 	for(i = 0; i < LICZBA_MECHANIKOW; i++) {
-		procesKonczacy = waitpid(serwisKom.pids[i], NULL, 0);
-		if(procesKonczacy == serwisKom.pids[i]) {
+		procesKonczacy = waitpid(serwis.mechanicy[i], NULL, 0);
+		if(procesKonczacy == serwis.mechanicy[i]) {
 			printf("Mechanik: %d zakonczyl prace\n", i);
 		}
 	}
@@ -42,10 +42,10 @@ int initMechanicy() {
 				res = -1;
 			}
 		}
-		serwisKom.pids[i] = mechanikPid;
+		serwis.mechanicy[i] = mechanikPid;
 	}
-	serwisKom.typ = ID_SERWIS;
-	if(msgsnd(kierownikMsgQId, &serwisKom, sizeof(serwisKom.pids), 0) == -1) {
+	serwis.typ = ID_SERWIS;
+	if(msgsnd(kierownikMsgQId, &serwis, sizeof(pid_t) * (1 + LICZBA_MECHANIKOW), 0) == -1) {
 		printf("[ERR] Serwis: Blad wysylania informacji o inicjalizacji serwisu\n");
 		return -1;
 	}
