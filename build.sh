@@ -19,9 +19,5 @@ function clean() {
 
 clean
 compile kierownik
-compile serwis
-compile recepcja
 compile mechanik
-compile kasjer
 compile obslugaKlienta
-compile kolejka

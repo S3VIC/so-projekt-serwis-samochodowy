@@ -2,12 +2,14 @@
 #include <string.h>
 #define SLEEP_TIME_S 1
 #define SLEEP_TIME_US 5000
+/*
+	ID wiadomosci przekazywanych do kolejki kierownika
+*/
 #define ID_KIEROWNIK 0
-#define ID_RECEPCJA 1
-#define ID_SERWIS 2
+#define ID_MECHANIK 1
+#define ID_OBSLUGA_KLIENTA 2
 #define ID_KOLEJKA 3
-#define ID_OBSLUGA_KLIENTA 4
-#define ID_KASJER 5
+#define ID_KASJER 4
 
 #define LICZBA_MECHANIKOW 8
 #define LICZBA_ST_OBSLUGI_KLIENTA 3
@@ -20,6 +22,10 @@ typedef struct {
 	pid_t mechanicy[LICZBA_MECHANIKOW];
 } service;
 
+typedef struct {
+	long int typ;
+	unsigned int id;
+} procesReport;
 typedef struct {
 	long int typ;
 	pid_t pid;
@@ -111,3 +117,15 @@ int initProcess(const char* name, char *const args[]) {
 	}
 	return pid;
 }
+
+int initProcessGroup(const char* name, char *const args[], int count, int* pids) {
+	int i, res;
+	for(i = 0; i < count; i++) {
+		pids[i] = -1;
+		res = initProcess(name, args);
+		if(res < 0) return res;
+		pids[i] = res;
+	}
+	return 0;
+}
+
