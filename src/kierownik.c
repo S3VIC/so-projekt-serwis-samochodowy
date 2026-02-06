@@ -30,6 +30,12 @@ int main() {
 	}
 	res = initProcessGroup("obslugaKlienta", obslugaKlientaArgs, LICZBA_ST_OBSLUGI_KLIENTA, stObsKlienta);
 	if(res < 0) exit(2);
+	report.type = ID_OBSLUGA_KLIENTA;
+	for(i = 0; i < LICZBA_ST_OBSLUGI_KLIENTA; i++) {
+		report.id = i;
+		if(msgsnd(kierownikMsgQId, &report, sizeof(report.id), 0) == -1)
+			printf("[ERR] Kierownik: blad przesylu wiadomosci do obslugi klienta %d\n", i);
+	}
 	res = initProcess("kolejka", kolejkaArgs);
 	if(res < 0) exit(3);
 	for(i = 0; i < LICZBA_MECHANIKOW + LICZBA_ST_OBSLUGI_KLIENTA + 1; i++) {

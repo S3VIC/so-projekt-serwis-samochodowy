@@ -1,17 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "shared.h"
 
-typedef struct {
-	int working; 	/* flaga na okreslenie czy stanowisko pracuje */
-	int id; 		/* 0-2 (3 stanowiska) */
-} stanowisko;
-
-int working = 0;
+int kierownikMsgQId, obslugaKlientaId;
+processReport report;
 int main() {
-	stanowisko s = {0};
-	s.id = 1;
-	printf("[INF] Proces stanowiska %d obslugi klienta zaincjalizowany pomyslnie\n", s.id);
-	sleep(2);
+	initMsgQ(&kierownikMsgQId, ID_KIEROWNIK, IPC_CREAT | 0600, -1);
+	if(msgrcv(kierownikMsgQId, &report, sizeof(report.id), ID_OBSLUGA_KLIENTA, 0) == -1) {
+		printf("[ERR] Mechanik: Blad przesylu wiadomosci od kierownika\n");
+	} else
+		obslugaKlientaId = report.id;
+	printf("Obsluga klienta: OK%d gotowa\n", obslugaKlientaId);
+	sleep(1);
 	return 0;
 }
