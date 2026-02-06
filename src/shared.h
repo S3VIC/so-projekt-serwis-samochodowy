@@ -23,9 +23,9 @@ typedef struct {
 } service;
 
 typedef struct {
-	long int typ;
+	long int type;
 	unsigned int id;
-} procesReport;
+} processReport;
 typedef struct {
 	long int typ;
 	pid_t pid;

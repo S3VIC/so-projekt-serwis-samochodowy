@@ -4,6 +4,6 @@
 
 int main() {
 	printf("[INF] Proces kolejki zaincjalizowany pomyslnie\n");
-	sleep(2);
+	sleep(1);
 	return 0;
 }
