@@ -22,3 +22,4 @@ compile kierownik
 compile mechanik
 compile obslugaKlienta
 compile kolejka
+compile kasjer
