@@ -9,6 +9,7 @@ int initMechanicy();
 int initObslugaKlienta();
 int initKolejka();
 int initProcesses(const char* name, char *const args[], int count, int msgType, processDetails* details);
+int stopProcesses(const char* name, int count, int msgType, processDetails *details);
 void handleSigInt(int sig);
 
 int kierownikMsgQId;
@@ -36,6 +37,7 @@ int main() {
 	if(res < 0) exit(4);
 	/* + 2 : proces kolejki + proces kasjera */
 	sleep(500);
+
 	for(i = 0; i < LICZBA_MECHANIKOW + LICZBA_ST_OBSLUGI_KLIENTA + 2; i++)
 		wait(NULL);
 	msgctl(kierownikMsgQId, IPC_RMID, NULL);
@@ -61,46 +63,31 @@ int initProcesses(const char* name, char *const args[], int count, int msgType, 
 }
 
 void handleSigInt(int sig) {
-	int i;
-	processAction pa, paResponse;
-	size_t paMessageSize;
-	paMessageSize = 2 * sizeof(pa.stop);
 	printf("[INF] Kierownik: Zamykanie symulacji... (Otrzymano sygnal: %d)\n", sig);
-	pa.type = MECHANIK_STOP_MESSAGE;
-	for(i = 0; i < LICZBA_MECHANIKOW; i++) {
-		if(msgsnd(kierownikMsgQId, &pa, paMessageSize, 0) == -1)
-			printf("[ERR] Kierownik: blad przesylu wiadomosci do %s%d\n", "Mechanik", i);
-		if(msgrcv(kierownikMsgQId, &paResponse, paMessageSize, MECHANIK_STOP_MESSAGE, 0) == -1)
-			printf("[ERR] Kierownik: blad otrzymania potwierdzenia zatrzymania od %s%d\n", "Mechanik", i);
-		else {
-			wait(NULL);
-			mechanicy[i].running = 0;
-		}
-	}
-	pa.type = KASJER_STOP_MESSAGE;
-	if(msgsnd(kierownikMsgQId, &pa, paMessageSize, 0) == -1)
-		printf("[ERR] Kierownik: blad przesylu wiadomosci do %s\n", "Kasjer");
-	if(msgrcv(kierownikMsgQId, &pa, paMessageSize, KASJER_STOP_MESSAGE, 0) == -1)
-		printf("[ERR] Kierownik: blad otrzymania potwierdzenia zatrzymania od %s\n", "Kasjer");
-	else
-		kasjer.running = 0;
-	pa.type = OBSLUGA_KLIENTA_STOP_MESSAGE;
-	for(i = 0; i < LICZBA_ST_OBSLUGI_KLIENTA; i++) {
-		if(msgsnd(kierownikMsgQId, &pa, paMessageSize, 0) == -1)
-			printf("[ERR] Kierownik: blad przesylu wiadomosci do %s%d\n", "Obsluga Klienta", i);
-		if(msgrcv(kierownikMsgQId, &pa, paMessageSize, OBSLUGA_KLIENTA_STOP_MESSAGE, 0) == -1)
-			printf("[ERR] Kierownik: blad otrzymania potwierdzenia zatrzymania od %s%d\n", "Obsluga Klienta", i);
-		else
-			stObsKlienta[i].running = 0;
-	}
-	pa.type = KOLEJKA_STOP_MESSAGE;
-	if(msgsnd(kierownikMsgQId, &pa, paMessageSize, 0) == -1)
-		printf("[ERR] Kierownik: blad przesylu wiadomosci do %s\n", "Kolejka");
-	if(msgrcv(kierownikMsgQId, &pa, paMessageSize, KOLEJKA_STOP_MESSAGE, 0) == -1)
-		printf("[ERR] Kierownik: blad otrzymania potwierdzenia zatrzymania od %s%d\n", "Obsluga Klienta", i);
-	for(i = 0; i < LICZBA_ST_OBSLUGI_KLIENTA + 2; i++)
-		wait(NULL);
+	/*Przyda sie zapauzowac kolejke przed stopowaniem pozostalych procesów - ale i tak zatrzymac ja na koncu*/
+	stopProcesses("Mechanik", LICZBA_MECHANIKOW, MECHANIK_STOP_MESSAGE, mechanicy);
+	stopProcesses("Kasjer", 1, KASJER_STOP_MESSAGE, &kasjer);
+	stopProcesses("Obsluga klienta", LICZBA_ST_OBSLUGI_KLIENTA, OBSLUGA_KLIENTA_STOP_MESSAGE, stObsKlienta);
+	stopProcesses("Kolejka", 1, KOLEJKA_STOP_MESSAGE, &kolejka);
 	msgctl(kierownikMsgQId, IPC_RMID, NULL);
 	exit(0);
 }
 
+int stopProcesses(const char* name, int count, int msgType, processDetails *details) {
+	int i;
+	processAction pa;
+	size_t paMessageSize;
+	paMessageSize = 2 * sizeof(pa.stop);
+	pa.type = msgType;
+	for(i = 0; i < count; i++) {
+		if(msgsnd(kierownikMsgQId, &pa, paMessageSize, 0) == -1)
+			printf("[ERR] Kierownik: blad przesylu wiadomosci do %s %d\n", name, i);
+		if(msgrcv(kierownikMsgQId, &pa, paMessageSize, msgType, 0) == -1)
+			printf("[ERR] Kierownik: blad otrzymania potwierdzenia zatrzymania od %s %d\n", name, i);
+		else {
+			wait(NULL);
+			details[i].running = 0;
+		}
+	}
+	return 0;
+}
