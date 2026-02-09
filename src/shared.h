@@ -2,6 +2,9 @@
 #include <string.h>
 #define SLEEP_TIME_S 1
 #define SLEEP_TIME_US 5000
+
+#define LICZBA_MECHANIKOW 8
+#define LICZBA_ST_OBSLUGI_KLIENTA 3
 /*
 	ID wiadomosci przekazywanych do kolejki kierownika
 */
@@ -11,20 +14,29 @@
 #define ID_KOLEJKA 3
 #define ID_KASJER 4
 
-#define LICZBA_MECHANIKOW 8
-#define LICZBA_ST_OBSLUGI_KLIENTA 3
+#define MECHANIK_STOP_MESSAGE 11
+#define OBSLUGA_KLIENTA_STOP_MESSAGE 12
+#define KOLEJKA_STOP_MESSAGE 13
+#define KASJER_STOP_MESSAGE 14
+
 
 const char* sSciezka = "./bin";
 
 typedef struct {
-	unsigned int id;
 	pid_t pid;
+	int running;
 } processDetails;
 
 typedef struct {
 	long int type;
 	unsigned int id;
 } processReport;
+
+typedef struct {
+	long int type;
+	int stop;
+	int confirmation;
+} processAction;
 
 typedef enum {
  	U1 = 0, U2, U3, U4, U5, U6, U7, U8,
@@ -92,12 +104,15 @@ int initProcess(const char* name, char *const args[]) {
 	return pid;
 }
 
-int initProcessGroup(const char* name, char *const args[], int count, int* pids) {
+int initProcessGroup(const char* name, char *const args[], int count, processDetails* details) {
 	int i, res;
 	for(i = 0; i < count; i++) {
 		res = initProcess(name, args);
-		if(pids)
-			pids[i] = res;
+		if(details) {
+			details[i].pid = res;
+			details[i].running = 1;
+		}
+
 	}
 	return 0;
 }
