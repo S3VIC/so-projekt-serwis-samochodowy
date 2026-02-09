@@ -8,13 +8,15 @@ function compile() {
 }
 
 function clean() {
-	for i in bin/*
-	do
-		if [ -x $i ]; then
-			echo "Removing: $i"
-			rm $i
-		fi
-	done
+	if [ -d bin ]; then
+		for i in bin/*
+		do
+			if [ -x $i ]; then
+				echo "Removing: $i"
+				rm $i
+			fi
+		done
+	fi
 }
 
 clean
